@@ -1,0 +1,74 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}夢境回應{% endblock title %}
+
+{% block content %}
+<div class="main-content ds-reply">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="ds-reply-header">
+                <a class="ds-reply-back" href="{% url 'dreams:dream-list' %}">
+                    <i class="ri-arrow-left-line" aria-hidden="true"></i>
+                    返回夢境列表
+                </a>
+                <h1 class="ds-reply-title">夢境回應</h1>
+                <p class="ds-reply-subtitle">其他人的回應與領受。</p>
+            </div>
+
+            <div class="ds-timeline">
+                <div class="ds-timeline-item ds-timeline-dream">
+                    <div class="ds-timeline-dot"></div>
+                    <div class="ds-timeline-card">
+                        <div class="ds-dream-main-header">
+                            <h2 class="ds-dream-topic">在高山上遇見白鴿</h2>
+                            <div class="ds-dream-meta">做夢者：王小明 · 2026-02-01</div>
+                        </div>
+                        <div class="ds-dream-section">
+                            <h3>夢的內容</h3>
+                            <p>夢中看見白鴿穿越雲層，停留在高山上，光從雲後灑下。</p>
+                        </div>
+                        <div class="ds-dream-section">
+                            <h3>個人解讀 / 夢語言解釋</h3>
+                            <p>白鴿象徵平安與聖靈，山峰代表屬靈高度，光代表引導與啟示。</p>
+                        </div>
+                        <div class="ds-dream-section">
+                            <h3>領受</h3>
+                            <p>提醒我要持續追求屬靈高度，並相信神的引導正在臨到。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ds-timeline-item">
+                    <div class="ds-timeline-dot"></div>
+                    <div class="ds-timeline-card">
+                        <div class="ds-reply-meta">回應者：林怡君 · 2026-02-03 10:45</div>
+                        <p>我也有類似的白鴿夢，覺得是在提醒我們彼此守望。</p>
+                    </div>
+                </div>
+
+                <div class="ds-timeline-item">
+                    <div class="ds-timeline-dot"></div>
+                    <div class="ds-timeline-card">
+                        <div class="ds-reply-meta">回應者：陳家豪 · 2026-02-04 21:18</div>
+                        <p>山上的光給人安全感，可能是正在預備新的事工方向。</p>
+                    </div>
+                </div>
+
+                <div class="ds-timeline-item ds-timeline-form">
+                    <div class="ds-timeline-dot"></div>
+                    <div class="ds-timeline-card">
+                        <div class="ds-reply-meta">新增回應</div>
+                        <form class="ds-reply-form">
+                            <textarea class="ds-reply-textarea" rows="4" placeholder="寫下你的回應..."></textarea>
+                            <div class="ds-reply-actions">
+                                <button type="submit" class="ds-reply-button">送出回應</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

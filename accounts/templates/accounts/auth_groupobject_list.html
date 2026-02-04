@@ -1,0 +1,657 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %}群組指標權限管理{% endblock title %}
+
+{% block extra_css %}
+    <!--datatable css-->
+    <link href="{% static 'libs/datatable/css/dataTables.bootstrap5.min.css' %}" rel="stylesheet"/>
+    <link href="{% static 'libs/datatable/css/dataTables.dataTables.css' %}" rel="stylesheet"/>
+
+    <!--datatable button css-->
+    <link href="{% static 'libs/datatable/css/buttons.dataTables.min.css' %}" rel="stylesheet"/>
+
+    <!--datatable responsive css-->
+    <link href="{% static 'libs/datatable/css/responsive.bootstrap.min.css' %}" rel="stylesheet"/>
+
+    <!-- SweetAlert2 css-->
+    <link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet">
+
+    <!-- icon css -->
+    <link href="{% static 'iconfonts/fontawesome/fontawesome-all.min.css' %}" rel="stylesheet" type="text/css"/>
+
+    <!-- Select2 css-->
+    <link href="{% static 'libs/select2/dist/select2.min.css' %}" rel="stylesheet">
+
+    <style>
+        .table-scrollable-y {
+            max-height: 400px; /* 根據需要調整這個高度 */
+        }
+
+        .table-responsive,
+        .dataTables_scrollBody {
+            overflow: visible !important;
+        }
+        /* 當 table-responsive 和 table-scrollable-y 同時存在時，強制覆蓋 overflow-y */
+        .table-responsive.table-scrollable-y {
+            overflow-y: auto !important;
+        }
+
+        .table-responsive-disabled .dataTables_scrollBody {
+            overflow: hidden !important;
+        }
+    </style>
+{% endblock extra_css %}
+
+{% block content %}
+    <div class="main-content">
+        <div class="page-content">
+            <div class="container-fluid">
+                {% block pagetitle %}
+                    {% include "partials/page-title.html" with title="群組指標權限管理" %}
+                {% endblock pagetitle %}
+                <!-- Row -->
+                <div class="row row-sm">
+                    <div class="col-lg-12">
+                        <div class="card custom-card">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-primary" id="new" data-bs-toggle="modal"
+                                            data-bs-target="#NewAndEditModal" title="新增">
+                                    </button>
+                                </div>
+                                <div class="table-responsive ">
+                                    <table id="datatable"
+                                           class="table table-bordered dt-responsive nowrap table-striped align-middle hover"
+                                           style="width:100%">
+                                        <thead class="table-head">
+                                        <tr>
+                                            <th scope="col">序號</th>
+                                            <th scope="col">群組名稱</th>
+                                            <th scope="col">動作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Row -->
+
+                <!-- NEW and EDIT Modal (群組名稱 + 指標權限) -->
+                <div class="modal fade" id="NewAndEditModal" role="dialog">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <form id="group-pointer-form">
+                                <div class="modal-header">
+                                    <h3 class="modal-title" id="modal_title"></h3>
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="name">群組名稱：<span class="text-danger">*</span></label>
+                                            <!-- 這裡移除了 readonly，讓使用者可以編輯 -->
+                                            <input type="text" class="form-control" id="name" name="name" required placeholder="請輸入群組名稱">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="filter_by_pointer_type">指標分類過濾：</label>
+                                            <select class="form-select" id="filter_by_pointer_type">
+                                                <option value="" selected disabled>請選擇分類</option>
+                                                {% for pa in objParameter %}
+                                                    <option value="{{ pa.pa_value }}">{{ pa.pa_value }}</option>
+                                                {% endfor %}
+                                                <option value="ALL">全部顯示</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive table-scrollable-y" style="max-height: 60vh;">
+                                        <table class="table table-bordered table-striped" id="pointer-table">
+                                            <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                                                <tr>
+                                                    <th>指標代碼</th>
+                                                    <th>指標名稱</th>
+                                                    <th class="text-center">
+                                                        <div class="form-check d-flex justify-content-center align-items-center">
+                                                            <input class="form-check-input" type="checkbox" id="check-all-view">
+                                                            <label class="form-check-label ms-1" for="check-all-view">讀取</label>
+                                                        </div>
+                                                    </th>
+                                                    <th class="text-center">
+                                                        <div class="form-check d-flex justify-content-center align-items-center">
+                                                            <input class="form-check-input" type="checkbox" id="check-all-change">
+                                                            <label class="form-check-label ms-1" for="check-all-change">修改</label>
+                                                        </div>
+                                                    </th>
+                                                    <th class="text-center">
+                                                        <div class="form-check d-flex justify-content-center align-items-center">
+                                                            <input class="form-check-input" type="checkbox" id="check-all-delete">
+                                                            <label class="form-check-label ms-1" for="check-all-delete">刪除</label>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- 動態載入 -->
+                                            </tbody>
+                                        </table>
+                                        <!-- 新增模式時的提示 -->
+                                        <div id="new-group-hint" class="text-center mt-4" style="display:none;">
+                                            <p class="text-muted">請先建立群組名稱並存檔，再進行指標權限設定。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="type" name="type" value="">
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn ripple btn-primary">
+                                        <i class="bx bx-save"></i> 存檔
+                                    </button>
+                                    <button class="btn ripple btn-light" data-bs-dismiss="modal" type="button">
+                                        <i class="ri-close-line"></i> 取消
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Modal (保留人員設定) -->
+                <div class="modal fade" id="UserModal" role="dialog">
+                    {% csrf_token %}
+                    <div class="modal-dialog modal-xl">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <form class="form-group" role="form">
+                                <div class="modal-header">
+                                    <h3 class="modal-title" id="user_modal_title"><i class="fa fa-user modal-icon"></i> 人員</h3>
+                                    <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button">
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-12 form-group">
+                                            <label for="name-user">群組名稱</label><span class="text-danger ml-1"
+                                                                                         style="color:red"> *</span>
+                                            <input type="text" class="form-control" id="name-user" name="name"
+                                                   placeholder="群組名稱" readonly required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>待挑選的人員</h5>
+                                            <div class="table-responsive table-scrollable-y">
+                                                <table id="left-table-user" class="table table-bordered">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>姓名</th>
+                                                        <th>email</th>
+                                                        <th>動作</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for user in Users %}
+                                                        <tr data-id="{{ user.id }}"
+                                                            data-sort1="{{ user.id }}">
+                                                            <td>{{ user.first_name }}</td>
+                                                            <td>{{ user.email }}</td>
+                                                            <td>
+                                                                <button type="button"
+                                                                        class="btn btn-sm btn-primary move-right">移動
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>已挑選的人員</h5>
+                                            <div class="table-responsive table-scrollable-y">
+                                                <table id="right-table-user" class="table table-bordered">
+                                                    <thead>
+                                                    <tr data-id="{{ user.id }}" data-sort1="{{ user.id }}">
+                                                        <th>姓名</th>
+                                                        <th>email</th>
+                                                        <th>動作</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <!-- Initially empty -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn ripple btn-primary">
+                                            <i class="bx bx-save"></i> 存檔
+                                        </button>
+                                        <button class="btn ripple btn-light" data-bs-dismiss="modal" type="button">
+                                            <i class="ri-close-line"></i> 取消
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Modal -->
+                <div class="modal fade" id="DeleteModal" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="delete_modal_title"></h4>
+                                <small class="modal-subtitle"></small>
+                                <button aria-label="Close" class="btn-close" data-bs-dismiss="modal"
+                                        type="button"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="lead">你確認要刪除: <strong id="delid"></strong>?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn ripple btn-danger" data-dismiss="modal" id="delete"><i
+                                        class="bx bx-trash"></i> 刪除
+                                </button>
+                                <button type="button" class="btn ripple btn-light" data-bs-dismiss="modal"><i
+                                        class="ri-close-line"></i> 取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- End Page-content -->
+        </div>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+
+    <!-- jquery -->
+    <script src="{% static 'libs/jquery/jquery-3.6.0.min.js' %}"></script>
+
+    <!--  Datatable js -->
+    <script src="{% static 'libs/datatable/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'libs/datatable/js/dataTables.bootstrap5.min.js' %}"></script>
+    <script src="{% static 'libs/datatable/js/dataTables.buttons.min.js' %}"></script>
+    <script src="{% static 'libs/datatable/js/dataTables.responsive.min.js' %}"></script>
+
+    <!-- sweetalert2 js-->
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.all.min.js' %}"></script>
+    <script src="{% static 'js/inits/sweetalert2.init.js' %}"></script>
+
+    <!-- select2 js -->
+    <script src="{% static 'libs/select2/dist/select2.min.js' %}"></script>
+
+    <!-- datatable init -->
+    <script>
+        let baseUrl = '/accounts/group/';
+
+        let table = $('#datatable').DataTable({
+            'processing': true,
+            'serverSide': true,
+            'searching': true,
+            'scrollCollapse': true,
+            'language': {url: '{% static "libs/datatable/zh-HANT.json" %}'},
+            'ajax': {
+                url: baseUrl,
+                type: 'GET',
+            },
+            'columns': [
+                {"data": "id"},
+                {"data": "name"},
+                {
+                    "data": null,
+                    "orderable": false,
+                    "defaultContent":
+                        '<div class="dropdown d-inline-block">' +
+                        '<button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
+                        '<i class="ri-more-fill align-middle"></i> ' +
+                        '</button> ' +
+                        '<ul class="dropdown-menu dropdown-menu-end">' +
+                        // 保留人員按鈕
+                        '<li class="dropdown-item user-btn" data-bs-toggle="modal" data-bs-target="#UserModal" title="人員"><i class="ri-user-2-fill align-bottom me-2 text-muted"></i> 人員</li> ' +
+                        // 修改按鈕現在是開啟 NewAndEditModal (含指標權限)
+                        '<li class="dropdown-item edit-item-btn" data-bs-toggle="modal" data-bs-target="#NewAndEditModal" title="權限"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> 權限</li> ' +
+                        '<li class="dropdown-item remove-item-btn" data-bs-toggle="modal" data-bs-target="#DeleteModal" title="刪除"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> 刪除</li> ' +
+                        '</ul>' +
+                        '</div>'
+                }
+            ],
+        });
+    </script>
+
+    <!-- CRUD & Logic -->
+    <script>
+        let id = 0;
+        const modal_title = '群組'
+
+        // 用來儲存所有指標資料的全域變數
+        let allPointersData = [];
+
+        // 1. 指標比對函數：處理多個分類與空白問題
+        function isTypeMatch(itemType, filterType) {
+            let safeFilter = (filterType || '').toString().trim();
+            if (!safeFilter || safeFilter === 'ALL') return true;
+            if (!itemType) return false;
+            let types = itemType.toString().split(',');
+            return types.some(t => t.trim() === safeFilter);
+        }
+
+        // 2. 渲染指標表格
+        function renderPointerTable(data) {
+            let html = '';
+            if (data.length === 0) {
+                html = '<tr><td colspan="5" class="text-center">無符合條件的資料</td></tr>';
+            } else {
+                data.forEach(function (item) {
+                    html += `
+                        <tr data-pointer-id="${item.id}">
+                            <td>${item.code}</td>
+                            <td>${item.name} <br> <small class="text-muted">(${item.type})</small></td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input perm-check" data-perm="view" ${item.has_view ? 'checked' : ''}>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input perm-check" data-perm="change" ${item.has_change ? 'checked' : ''}>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input perm-check" data-perm="delete" ${item.has_delete ? 'checked' : ''}>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            $('#pointer-table tbody').html(html);
+            updateSelectAllState();
+        }
+
+        // 3. 檢查並更新表頭「全選」Checkbox 的狀態
+        function updateSelectAllState() {
+            ['view', 'change', 'delete'].forEach(perm => {
+                let totalVisible = $('#pointer-table tbody input[data-perm="' + perm + '"]').length;
+                let totalChecked = $('#pointer-table tbody input[data-perm="' + perm + '"]:checked').length;
+
+                let checkAllBox = $(`#check-all-${perm}`);
+                if (totalVisible > 0 && totalVisible === totalChecked) {
+                    checkAllBox.prop('checked', true).prop('indeterminate', false);
+                } else if (totalChecked > 0) {
+                    checkAllBox.prop('checked', false).prop('indeterminate', true);
+                } else {
+                    checkAllBox.prop('checked', false).prop('indeterminate', false);
+                }
+            });
+        }
+
+        // 4. 處理 Table 排序 (通用)
+        function sortTable(table) {
+            let rows = $(table).find("tbody tr").get();
+            rows.sort(function (a, b) {
+                let sort1 = parseInt($(a).data("sort1"));
+                let sort2 = parseInt($(b).data("sort1"));
+                return sort1 - sort2;
+            });
+            $.each(rows, function (index, row) {
+                $(table).children("tbody").append(row);
+            });
+        }
+
+        $(document).ready(function () {
+            // 初始化新增按鈕文字
+            $('#new').html(`<i class="ri-add-line"></i> 新增${modal_title}`);
+
+            // 監聽修改、刪除、人員按鈕
+            $('#datatable tbody').on('click', '.edit-item-btn, .remove-item-btn, .user-btn', function () {
+                let data = table.row($(this).parents('tr')).data();
+                if (data === undefined) {
+                    let datanum = table.row($(this))['0'][0];
+                    data = table.row($(this).parents('tr')).context[0].aoData[datanum]._aData;
+                }
+                id = data['id'];
+
+                if ($(this).hasClass('user-btn')) {
+                    // --- 人員模式 ---
+                    $('#name-user').val(data['name']);
+                    $('#right-table-user tbody').empty(); // 清空右邊
+                    $('#left-table-user tbody').empty();  // 清空左邊
+
+                    // 1. 渲染左邊表格 (利用 Django Template 變數重置左側列表)
+                    {% for user in Users %}
+                        $('#left-table-user tbody').append(`
+                            <tr data-id="{{ user.id }}" data-sort1="{{ user.id }}">
+                                <td>{{ user.first_name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary move-right">移動</button>
+                                </td>
+                            </tr>
+                        `);
+                    {% endfor %}
+
+                    // 2. 根據 data.users 將人員從左邊移到右邊
+                    if (data.users && data.users.length > 0) {
+                        data.users.forEach(function (user) {
+                            // 從左邊表格找到對應的人員列，並觸發其移動按鈕的點擊事件
+                            $('#left-table-user tbody tr[data-id="' + user.id + '"] .move-right').click();
+                        });
+                    }
+
+                } else if ($(this).hasClass('edit-item-btn')) {
+                    // --- 修改模式 (名稱 + 指標權限) ---
+                    $('#type').val('EDIT');
+                    $('#name').val(data['name']); // 帶入名稱
+                    $('#modal_title').html(`<i class="fa fa-list-alt modal-icon text-primary"> 修改${modal_title}</i>`);
+
+                    $('#new-group-hint').hide();
+                    $('#pointer-table').show();
+                    $('#pointer-table tbody').html('<tr><td colspan="5" class="text-center">載入中...</td></tr>');
+
+                    // 重置過濾與全選
+                    $('#filter_by_pointer_type').val('ALL');
+                    $('input[id^="check-all-"]').prop('checked', false).prop('indeterminate', false);
+
+                    // 呼叫 API 載入指標權限
+                    $.ajax({
+                        url: baseUrl + id + '/pointer_perms/',
+                        type: 'GET',
+                        success: function (response) {
+                            allPointersData = response;
+                            renderPointerTable(allPointersData);
+                        },
+                        error: function (xhr) {
+                            Toast.fire({icon: 'error', title: '讀取指標失敗'});
+                            $('#pointer-table tbody').html('<tr><td colspan="5" class="text-center text-danger">讀取失敗</td></tr>');
+                        }
+                    });
+
+                } else {
+                    // --- 刪除模式 ---
+                    $('#delete_modal_title').html(`<i class="fa fa-trash-alt modal-icon text-danger"> 刪除${modal_title}</i>`);
+                    $('#delid').text(data['name']);
+                }
+            });
+
+            // 新增按鈕
+            $('#new').on('click', function () {
+                $('#type').val('NEW');
+                $('#name').val(''); // 清空名稱
+                $('#modal_title').html(`<i class="fa fa-plus modal-icon text-primary"> 新增${modal_title}</i>`);
+
+                // 新增模式下的表格處理 (先隱藏表格，要求先存群組名稱)
+                allPointersData = [];
+                $('#pointer-table tbody').empty();
+                $('#pointer-table').hide();
+                $('#new-group-hint').show();
+
+                // 重置過濾器
+                $('#filter_by_pointer_type').val('ALL');
+                $('input[id^="check-all-"]').prop('checked', false).prop('indeterminate', false);
+            });
+
+            // --- 指標相關邏輯 ---
+
+            // 下拉選單過濾
+            $('#filter_by_pointer_type').on('change', function() {
+                let selectedType = $(this).val();
+                let filteredData = allPointersData.filter(item => isTypeMatch(item.type, selectedType));
+                renderPointerTable(filteredData);
+            });
+
+            // 指標表格內 Checkbox 改變事件
+            $('#pointer-table tbody').on('change', '.perm-check', function() {
+                let tr = $(this).closest('tr');
+                let pId = tr.data('pointer-id');
+                let pType = $(this).data('perm');
+                let checked = $(this).is(':checked');
+
+                let target = allPointersData.find(d => d.id === String(pId));
+                if (target) {
+                    if (pType === 'view') target.has_view = checked;
+                    if (pType === 'change') target.has_change = checked;
+                    if (pType === 'delete') target.has_delete = checked;
+                }
+                updateSelectAllState();
+            });
+
+            // 指標表頭 全選 Checkbox 事件
+            $('input[id^="check-all-"]').on('click', function() {
+                let permType = $(this).attr('id').replace('check-all-', '');
+                let isChecked = $(this).is(':checked');
+                let currentFilter = $('#filter_by_pointer_type').val();
+
+                allPointersData.forEach(item => {
+                    if (isTypeMatch(item.type, currentFilter)) {
+                         if (permType === 'view') item.has_view = isChecked;
+                         if (permType === 'change') item.has_change = isChecked;
+                         if (permType === 'delete') item.has_delete = isChecked;
+                    }
+                });
+
+                let dataToShow = allPointersData.filter(item => isTypeMatch(item.type, currentFilter));
+                renderPointerTable(dataToShow);
+            });
+
+            // --- 人員左右移動邏輯 ---
+
+            // Move item to the right (User)
+            $('#left-table-user').on('click', '.move-right', function () {
+                let row = $(this).closest('tr');
+                row.find('.move-right').removeClass('move-right').addClass('move-left').text('移回');
+                $('#right-table-user tbody').append(row);
+                sortTable('#right-table-user');
+            });
+
+            // Move item to the left (User)
+            $('#right-table-user').on('click', '.move-left', function () {
+                let row = $(this).closest('tr');
+                row.find('.move-left').removeClass('move-left').addClass('move-right').text('移動');
+                $('#left-table-user tbody').append(row);
+                sortTable('#left-table-user');
+            });
+
+            // --- 存檔區 ---
+
+            // 存檔: 群組名稱 + 指標權限
+            $('#NewAndEditModal form').on('submit', function (e) {
+                e.preventDefault();
+                let isNew = $('#type').val() === 'NEW';
+                let url = baseUrl;
+                let method = isNew ? 'POST' : 'PUT';
+                if (!isNew) url += id + '/';
+
+                let pointersData = allPointersData.map(function(item) {
+                    let perms = [];
+                    if (item.has_view) perms.push('view');
+                    if (item.has_change) perms.push('change');
+                    if (item.has_delete) perms.push('delete');
+                    return {
+                        id: item.id,
+                        perms: perms
+                    };
+                });
+
+                let formDataStr = $(this).serialize();
+                // 標示 update_type 為 group_and_pointers，讓後端知道要同時更新名稱與指標
+                let dataToSend = formDataStr + '&' + $.param({
+                    update_type: "pointer_permissions",
+                    pointers_data: JSON.stringify(pointersData)
+                });
+
+                $.ajax({
+                    headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                    url: url,
+                    method: method,
+                    data: dataToSend,
+                    success: function () {
+                        table.ajax.reload(null, false);
+                        $("#NewAndEditModal").modal('hide');
+                        Toast.fire({icon: 'success', title: '存檔成功'});
+                    },
+                    error: function (jqXHR) {
+                        Toast.fire({icon: 'error', title: '存檔失敗'});
+                        console.log(jqXHR);
+                    }
+                });
+            });
+
+            // 存檔: 人員
+            $('#UserModal form').on('submit', function (e) {
+                e.preventDefault();
+                let url = baseUrl + id + '/';
+                let method = 'PUT';
+
+                // 從 right-table-user 獲取已挑選的人員 ID
+                let userIds = $('#right-table-user tbody tr').map(function () {
+                    return $(this).data('id');
+                }).get();
+
+                let formData = $(this).serialize();
+                let dataToSend = formData + '&' + $.param({
+                    update_type: "users",
+                    group_users: userIds
+                });
+
+                $.ajax({
+                    headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                    url: url,
+                    method: method,
+                    data: dataToSend,
+                    success: function () {
+                        table.ajax.reload(null, false);
+                        $("#UserModal").modal('hide');
+                        Toast.fire({icon: 'success', title: '存檔人員成功'});
+                    },
+                    error: function (jqXHR) {
+                        Toast.fire({icon: 'success', title: '存檔人員失敗'});
+                        console.log(jqXHR);
+                    }
+                });
+            });
+
+            // 刪除確認
+            $('#DeleteModal').on('click', '#delete', function () {
+                $.ajax({
+                    headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                    url: baseUrl + id + '/',
+                    method: 'DELETE',
+                    success: function () {
+                        table.ajax.reload(null, false);
+                        $("#DeleteModal").modal('hide');
+                        Toast.fire({icon: 'success', title: '刪除成功'});
+                    },
+                    error: function (jqXHR) {
+                        Toast.fire({icon: 'error', title: '刪除失敗'});
+                        console.log(jqXHR);
+                    }
+                });
+            });
+        });
+    </script>
+
+{% endblock extra_js %}

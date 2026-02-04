@@ -1,0 +1,59 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Sign Up{% endblock title %}
+
+{% block content %}
+<div class="p-lg-5 p-4">
+    <div>
+        <h5 class="text-primary">註冊帳號</h5>
+    </div>
+
+    <div class="mt-4">
+        <form class="needs-validation" novalidate method="post" action="">
+            <div class="alert {{ message.tags }} mb-4" role="alert">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="email">電子信箱</label>
+                    <input id="email" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="username">使用者名稱</label>
+                    <input id="username" class="form-control">
+                </div>
+
+                <div class="mb-2">
+                    <label for="password1">請輸入密碼</label>
+                    <input id="password1" class="form-control">
+                </div>
+
+                <div class="mb-2">
+                    <label for="password2">請確認密碼</label>
+                    <input id="password2" class="form-control">
+                </div>
+
+                <div class="mt-4">
+                    <label for=""></label>
+                    <button class="btn btn-success w-100" type="submit">註冊</button>
+                </div>
+        </form>
+        <div class="mt-4 text-center">
+            <div class="signin-other-title">
+                <h5 class="fs-13 mb-4 title text-muted">第三方註冊</h5>
+            </div>
+
+            <div>
+                {% comment %} <button type="button" class="btn btn-primary btn-icon waves-effect waves-light"><i class="ri-facebook-fill fs-16"></i></button> {% endcomment %}
+                <a href="" class="btn btn-danger btn-icon waves-effect waves-light"><i class="ri-google-fill fs-16"></i></a>
+                {% comment %} <button type="button" class="btn btn-dark btn-icon waves-effect waves-light"><i class="ri-github-fill fs-16"></i></button>
+                                        <button type="button" class="btn btn-info btn-icon waves-effect waves-light"><i class="ri-twitter-fill fs-16"></i></button> {% endcomment %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 text-center">
+        <p class="mb-0">您已經有帳號了？<a href="{% url 'login' %}" class="fw-semibold text-primary text-decoration-underline"> 登入</a></p>
+    </div>
+</div>
+{% endblock content %}

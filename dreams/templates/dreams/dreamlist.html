@@ -1,0 +1,163 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %}夢串流主頁面{% endblock title %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="chat-wrapper d-lg-flex gap-1 mx-n4 mt-n4 p-1">
+                <div class="ds-manager-content w-100 p-3 py-0">
+                    <div class="mx-n3 pt-4 px-4 file-manager-content-scroll" data-simplebar>
+                        <div class="d-flex align-items-center mb-3 justify-content-between">
+                            <div>
+                                <h4 class="mb-1">夢境</h4>
+                                <p class="text-muted mb-0">整理夢境，連結回應與故事。</p>
+                            </div>
+                            <div class="search-box">
+                                <input type="text" class="form-control" placeholder="搜尋夢境或資料夾" autocomplete="off">
+                                <i class="ri-search-line search-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <h5 class="flex-grow-1 mb-0">資料夾</h5>
+                                <span class="text-muted fs-12">以主題或年份整理</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="card shadow-none border">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm">
+                                                    <div class="avatar-title bg-warning-subtle text-warning rounded">
+                                                        <i class="ri-folder-3-line"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">台北靈糧堂</h6>
+                                                    <p class="text-muted mb-0 fs-12">12 個夢境</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card shadow-none border">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm">
+                                                    <div class="avatar-title bg-warning-subtle text-warning rounded">
+                                                        <i class="ri-folder-3-line"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">宣教運動</h6>
+                                                    <p class="text-muted mb-0 fs-12">8 個夢境</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card shadow-none border">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="avatar-sm">
+                                                    <div class="avatar-title bg-warning-subtle text-warning rounded">
+                                                        <i class="ri-folder-3-line"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">青年復興</h6>
+                                                    <p class="text-muted mb-0 fs-12">4 個夢境</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="d-flex align-items-center mb-2">
+                                <h5 class="flex-grow-1 mb-0">夢境標題</h5>
+                                <span class="text-muted fs-12">最新夢境列表</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="card shadow-none border h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">在高山上遇見白鴿</h6>
+                                                    <p class="text-muted mb-2 fs-12">2026-02-01 · 類別：門徒訓練</p>
+                                                </div>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-icon btn-ghost-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ri-more-2-fill"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item" href="{% url 'dreams:dream-reply' %}">回應</a></li>
+                                                        <li><a class="dropdown-item text-danger" href="#">刪除</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted mb-0 fs-13">在夢中看見白鴿穿越雲層，留下溫暖的光。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="card shadow-none border h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">穿越雲層的光</h6>
+                                                    <p class="text-muted mb-2 fs-12">2026-01-28 · 類別：台灣安全</p>
+                                                </div>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-icon btn-ghost-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ri-more-2-fill"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item" href="{% url 'dreams:dream-reply' %}">回應</a></li>
+                                                        <li><a class="dropdown-item text-danger" href="#">刪除</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted mb-0 fs-13">光從雲層後灑下，像是被安慰與鼓勵。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="card shadow-none border h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">河流與金色道路</h6>
+                                                    <p class="text-muted mb-2 fs-12">2026-01-22 · 類別：禱告運動</p>
+                                                </div>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-icon btn-ghost-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ri-more-2-fill"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item" href="{% url 'dreams:dream-reply' %}">回應</a></li>
+                                                        <li><a class="dropdown-item text-danger" href="#">刪除</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted mb-0 fs-13">河流旁出現金色道路，引導向更明亮的方向。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

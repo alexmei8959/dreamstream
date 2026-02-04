@@ -1,0 +1,283 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %}{{ connector_name }}智能查詢{% endblock title %}
+
+{% block extra_css %}
+    <!-- plugin css -->
+    <link href="{% static 'libs/jsvectormap/dist/css/jsvectormap.min.css' %}" rel="stylesheet" type="text/css"/>
+    <!-- SweetAlert2 css-->
+    <link href="{% static 'libs/sweetalert2/dist/sweetalert2.min.css' %}" rel="stylesheet">
+    <!-- chat css -->
+    <link href="{% static 'css/chat.css' %}" rel="stylesheet">
+
+    <style>
+        .logo {
+            display: inline-block;
+            cursor: pointer;
+            position: relative;
+            top: 10px;
+            left: 10px;
+        }
+
+        .bar1, .bar2, .bar3 {
+            width: 35px;
+            height: 5px;
+            background-color: #333;
+            margin: 6px 0;
+            transition: 0.4s;
+        }
+
+        .change .bar1 {
+            transform: translate(0, 11px) rotate(-45deg);
+        }
+
+        .change .bar2 {
+            opacity: 0;
+        }
+
+        .change .bar3 {
+            transform: translate(0, -11px) rotate(45deg);
+        }
+
+        .overlay {
+            width: auto; /* 自動調整寬度 */
+            height: auto; /* 自動調整高度 */
+            max-height: 50%;
+            position: absolute;
+            z-index: 1000;
+            top: 10%;
+            left: -100%;
+            background-color: #E1DDE9;
+            transition: transform 0.5s, left 0.5s;
+            border-top-right-radius: 20px;
+            border-bottom-right-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: auto; /* 當內容超過高度時，顯示滾動條 */
+            box-sizing: border-box; /* 確保邊框和內距不影響高度 */
+        }
+
+        /* 在手機上佔滿整個畫面 */
+        @media (max-width: 767px) {
+            .overlay {
+                width: 100%;
+                height: 75%;
+                max-height: 75%;
+                overflow: scroll;
+            }
+        }
+
+        .overlay.active {
+            left: 0;
+        }
+
+        .card-body {
+            position: relative;
+            overflow: hidden;
+        }
+
+
+        .overlay-content {
+            padding: 20px;
+            font-size: 20px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .overlay a {
+            padding: 8px;
+            text-decoration: none;
+            font-size: 36px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .overlay a:hover, .overlay a:focus {
+            color: #f1f1f1;
+        }
+    </style>
+{% endblock extra_css %}
+{% block content %}
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+    <div class="main-content">
+
+        <div class="page-content">
+            <div class="container-fluid">
+                {% block pagetitle %}
+                    {% include "partials/page-title.html" with pagetitle="後台管理" title="智能查詢" %}
+                {% endblock pagetitle %}
+                <!-- Input with Placeholder -->
+                <div class="card">
+                    <div class="card-body">
+                        {% csrf_token %}
+                        <!-- 對話 -->
+                        <div id="dialoghistTimeline"
+                             style="height: 50vh;overflow-y: scroll;scroll-behavior: smooth;"></div>
+                        <form id="dialoghistForm" class="form-group">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="messages" required>
+                                <button class="btn btn-success" id="submit" type="submit"><i
+                                        class="f ri-send-plane-line" style="font-size: 20px"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- container-fluid -->
+    <div>
+    {% block footer %}
+        {% include "partials/footer.html" %}
+    {% endblock footer %}
+    </div>
+    <!-- end main content-->
+{% endblock content %}
+
+{% block extra_js %}
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+
+    <!-- Vector map-->
+    <script src="{% static 'libs/jsvectormap/dist/js/jsvectormap.min.js' %}"></script>
+    <script src="{% static 'libs/jsvectormap/dist/maps/world-merc.js' %}"></script>
+
+    <!-- Dashboard init -->
+    <script src="{% static 'js/pages/dashboard-analytics.init.js' %}"></script>
+
+    <!-- Sweet alert 2 -->
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.all.min.js' %}"></script>
+
+    <!-- customer js -->
+    <script>
+        const url_param = window.location.pathname.split('/')[3]
+
+        function fnDialoghistView(data) {
+            let loading = document.getElementsByClassName('loading');
+            if (loading.length !== 0) {
+                loading[0].parentNode.removeChild(loading[0]);
+            }
+
+            let html = '';
+            let dialoghistTimeline = document.getElementById('dialoghistTimeline');
+            // 左側對話框
+            if (data[0].role !== 'human') {
+                html = '<div class="bubbleWrapper">\
+                            <div class="inlineContainer">\
+                                <div class="otherBubble other">\
+                                    ' + data[0].message.replaceAll(/\n/g, '<br>').replaceAll(/\*\*(.*?)\*\*/g, '<b>$1</b>') +
+                                '</div>\
+                            </div>\
+                        </div>';
+                document.querySelector(".bubbleLeft:last-child").innerHTML = html;
+                submit.disabled = false;
+            }
+            // 右側對話框
+            else {
+                html = '<div class="bubbleWrapper">\
+                            <div class="inlineContainer own">\
+                                <div class="ownBubble own">\
+                                    ' + data[0].message + '</div>\
+                            </div>\
+                        </div>' +
+                        '<div class="bubbleWrapper loading">\
+                            <div class="inlineContainer">\
+                                <div class="otherBubble other">\
+                                    <div class="typing">\
+                                        <div class="dot"></div>\
+                                        <div class="dot"></div>\
+                                        <div class="dot"></div>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        </div>';
+                dialoghistTimeline.insertAdjacentHTML('beforeend', html);
+                let tmp_html = document.createElement('div');
+                tmp_html.classList.add('bubbleLeft');
+                dialoghistTimeline.appendChild(tmp_html);
+            }
+
+            {#scrollToBottomIfNeeded();#}
+        }
+
+    </script>
+
+    <script>
+        const form = document.querySelector("#dialoghistForm");
+        const submit = document.getElementById("submit")
+
+        let data = new FormData()
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            // submit按鈕失效
+            submit.disabled = true;
+            // Get the user's message from the form
+            const message = form.elements["messages"].value;
+            await data.append("connector_id", url_param)
+            await data.append("message", message)
+            form.elements["messages"].value = ""
+
+
+            // Send a request to the Flask server with the user's message
+            // const response = await fnSendMessage(message)
+            // Create a new TextDecoder to decode the streamed response text
+            await fnSendMessage(message)
+        });
+
+        async function fnSendMessage(message) {
+            fnDialoghistView([{'message': message, 'role': 'human'}])
+            $.ajax({
+                url: "/commons/_playground/askAI/",
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                data: {'message': message},
+                success: function(res) {
+                    let response = JSON.parse(res)
+                    if (response.output) {
+                        response = response.output
+                    } else {
+                        response = response.message;
+                    }
+                    updateChat(response); // 回應成功後更新聊天視窗
+                },
+                error: function(xhr, status, error) {
+                    console.error("錯誤:", error);
+                }
+            });
+            // 更新聊天視窗的函數
+            function updateChat(responseText) {
+                fnDialoghistView([{'message': responseText, 'role': 'AI'}]); // 顯示 AI 回應的訊息
+                scrollToBottomIfNeeded(); // 滾動至最新訊息
+            }
+        }
+
+
+        function isScrollAtBottom() {
+            const scrollHeight = content.scrollHeight;
+            const clientHeight = content.clientHeight;
+            const scrollTop = content.scrollTop;
+            return scrollHeight - scrollTop === clientHeight;
+        }
+
+        let content = document.querySelector('#dialoghistTimeline');
+        let shouldScrollToBottom = true;
+        content.addEventListener('scroll', () => {
+            // 如果滚动到底部，则执行相应的操作
+            shouldScrollToBottom = isScrollAtBottom();
+        });
+
+        // 捲動到最底部的函式（僅當不在最底部時）
+        function scrollToBottomIfNeeded() {
+
+            // 判斷是否在最底部
+            if (shouldScrollToBottom) {
+                content.scrollTop = content.scrollHeight;
+            }
+        }
+    </script>
+{% endblock extra_js %}

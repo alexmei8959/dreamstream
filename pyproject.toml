@@ -1,0 +1,19 @@
+[project]
+name = "dreamstream"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "colorlog>=6.10.1",
+    "django>=5.2.10",
+    "django-comment-migrate>=0.1.7",
+    "django-guardian>=3.2.0",
+    "django-model-utils>=5.0.0",
+    "djangorestframework>=3.16.1",
+    "djangorestframework-stubs>=3.16.7",
+    "google-cloud-recaptcha-enterprise>=1.30.0",
+    "gunicorn>=24.1.1",
+    "pillow>=12.1.0",
+    "psycopg2>=2.9.11",
+    "shortuuid>=1.0.13",
+]

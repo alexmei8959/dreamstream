@@ -1,0 +1,136 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}夢串流登入{% endblock title %}
+
+{% block body_class %}ds-login-page{% endblock body_class %}
+
+{% block body_content %}
+<div class="ds-login-wrapper">
+    <div class="ds-login">
+        <div class="ds-login-left">
+            <div class="ds-login-inner">
+                <img class="ds-login-logo mb-2" src="{% static 'images/brands/breadoflife.png' %}" alt="Bread of Life">
+                <h1 class="ds-login-title">夢串流</h1>
+                <form id="login-form" class="ds-login-form" method="post" action="">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                    <div class="ds-error">
+                        {{ form.non_field_errors }}
+                        {{ form.login.errors }}
+                        {{ form.password.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="ds-field">
+                        <label for="id_login" class="ds-label">帳號</label>
+                        <div class="ds-input-wrap">
+                            <i class="ri-user-3-line ds-input-icon" aria-hidden="true"></i>
+                            <input type="text" id="id_login" name="login" class="ds-input"
+                                   placeholder="請輸入您的帳號" autocomplete="username" required>
+                        </div>
+                    </div>
+
+                    <div class="ds-field">
+                        <div class="ds-field-row">
+                            <label for="password" class="ds-label">密碼</label>
+                            <a class="ds-forgot" href="#">忘記密碼？</a>
+                        </div>
+                        <div class="ds-input-wrap">
+                            <i class="ri-lock-2-line ds-input-icon" aria-hidden="true"></i>
+                            <input type="password" id="password" name="password" class="ds-input"
+                                   placeholder="請輸入您的密碼" autocomplete="current-password" required>
+                            <button type="button" id="password-addon" class="ds-password-toggle"
+                                    aria-label="顯示密碼">
+                                <i class="ri-eye-line" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="g-recaptcha-response" id="id_g-recaptcha-response">
+                    <button class="ds-submit" type="submit" id="login-button">
+                        <span id="button-text">登入</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </form>
+            </div>
+            <div class="ds-login-meta">
+                <div class="ds-login-footer">© 2026 台北靈糧堂</div>
+            </div>
+        </div>
+        <div class="ds-login-right">
+            <img class="ds-login-image" src="{% static 'images/brands/dreamstream.png' %}" alt="Dreamstream">
+        </div>
+    </div>
+</div>
+{% endblock body_content %}
+
+{% block extra_js %}
+
+    <!-- password-addon init -->
+    <script src="{% static 'js/pages/password-addon.init.js' %}"></script>
+    <!-- google recaptcha -->
+    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LfvLFssAAAAAKdjyYaM2N-oa4HA5PSEu5sE6K1P"></script>
+
+    <script>
+        function togglePassword() {
+            var passwordField = document.getElementById("password");
+            var passwordAddon = document.getElementById("password-addon");
+
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                passwordAddon.innerHTML = '<i class="ri-eye-off-line" aria-hidden="true"></i>';
+            } else {
+                passwordField.type = "password";
+                passwordAddon.innerHTML = '<i class="ri-eye-line" aria-hidden="true"></i>';
+            }
+        }
+
+        // 綁定事件（取代 onclick）
+        document.getElementById("password-addon").addEventListener("click", togglePassword);
+
+        function onSubmit(token) {
+            document.getElementById("login-form").submit();
+        }
+    </script>
+
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const loginButton = document.getElementById('login-button');
+        const buttonText = document.getElementById('button-text');
+        const spinner = document.getElementById('spinner');
+        const recaptchaSiteKey = '6LfvLFssAAAAAKdjyYaM2N-oa4HA5PSEu5sE6K1P'; // 請安全存放，勿在前端硬編碼於公開倉庫
+
+        loginForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            loginButton.disabled = true;             // 禁用按鈕，防止重複提交
+            buttonText.classList.add('d-none');
+            spinner.classList.remove('d-none');
+
+            // --- Execute reCAPTCHA ---
+            grecaptcha.enterprise.ready(function () {
+                grecaptcha.enterprise.execute(recaptchaSiteKey, {action: 'login'}) // Use a meaningful action name
+                    .then(function (token) {
+                        // Add the token to the hidden input field
+                        document.getElementById('id_g-recaptcha-response').value = token;
+
+                        // --- Submit the form programmatically ---
+                        console.log('reCAPTCHA token obtained, submitting form.');
+                        loginForm.submit(); // Now submit the form with the token included
+
+                    })
+                    .catch(function (error) {
+                        // --- Handle reCAPTCHA errors ---
+                        console.error('reCAPTCHA execution failed:', error);
+                        alert('無法完成 reCAPTCHA 驗證，請稍後再試。');
+
+                        // Re-enable the button and hide spinner（修正變數）
+                        loginButton.disabled = false;
+                        spinner.classList.add('d-none');
+                        buttonText.classList.remove('d-none');
+                        loginButton.style.opacity = "1";
+                    });
+            });
+        });
+    </script>
+{% endblock extra_js %}
